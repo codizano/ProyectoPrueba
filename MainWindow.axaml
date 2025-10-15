@@ -1,0 +1,21 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ProyectoPrueba.MainWindow"
+        Title="ProyectoPrueba">
+    
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+        <TextBlock Text="Conexión a Base de Datos" FontSize="20" Margin="10"/>
+        <Button Content="Probar Conexión" Click="OnTestConnectionClick" Margin="10"/>
+        
+        <!-- Botón personalizado naranja -->
+    <Border Background="#FF9800" CornerRadius="4" Padding="20,12" Margin="10"
+        Cursor="Hand" 
+        PointerPressed="OnBuscarAlumnoClick">
+    
+    <TextBlock Text="🔍 Buscar Alumno" Foreground="White" FontWeight="Bold"
+               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+</Border>
+        
+        <TextBlock x:Name="StatusText" Text="Estado: Sin conectar" Margin="10"/>
+    </StackPanel>
+</Window>
