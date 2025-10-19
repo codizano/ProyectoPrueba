@@ -12,14 +12,33 @@
                  Watermark="Ingresa el nombre del alumno..."
                  Margin="0,10,0,0"/>
         
-        <Button Content="🔍 Buscar" 
-                Background="#FF9800" 
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <Button Grid.Column="1"
+                    Content="🔍 Buscar" 
+                    Background="#FF9800" 
+                    Foreground="White"
+                    BorderThickness="0"
+                    Padding="15,8"
+                    HorizontalAlignment="Right"
+                    Click="OnBuscarClick"/>
+        </Grid>
+
+        <TextBlock x:Name="ResultadoText" Margin="0,10,0,0"/>
+        
+        <Button x:Name="AgregarObservacionButton"
+                Content="➕ Agregar Observación"
+                Background="#4CAF50"
                 Foreground="White"
                 BorderThickness="0"
                 Padding="15,8"
                 HorizontalAlignment="Right"
-                Click="OnBuscarClick"/>
-        
-        <TextBlock x:Name="ResultadoText" Margin="0,10,0,0"/>
+                IsVisible="False"
+                Click="OnAgregarObservacionClick"
+                Margin="0,10,0,0"/>
     </StackPanel>
 </Window>

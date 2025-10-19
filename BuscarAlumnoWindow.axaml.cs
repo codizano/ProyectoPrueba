@@ -1,6 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Microsoft.EntityFrameworkCore;
+using ProyectoPrueba.Models;
+using System;
+using System.Linq;
 using System.Text;
 
 namespace ProyectoPrueba
@@ -8,11 +11,21 @@ namespace ProyectoPrueba
     public partial class BuscarAlumnoWindow : Window
     {
         private readonly ApplicationDbContext _context;
+        private Student? _estudianteActual;
 
         public BuscarAlumnoWindow(ApplicationDbContext context)
         {
             InitializeComponent();
             _context = context;
+        }
+
+        private void OnAgregarObservacionClick(object sender, RoutedEventArgs e)
+        {
+            if (_estudianteActual != null)
+            {
+                var ventanaObservacion = new AgregarObservacionWindow(_context, _estudianteActual);
+                ventanaObservacion.Show();
+            }
         }
         
         private async void OnBuscarClick(object sender, RoutedEventArgs e)
@@ -61,6 +74,20 @@ namespace ProyectoPrueba
                         }
 
                         ResultadoText.Text = sb.ToString();
+                        
+                        // Si solo hay un estudiante, mostrar el botón de agregar observación
+                        if (observacionesPorEstudiante.Count == 1)
+                        {
+                            AgregarObservacionButton.IsVisible = true;
+                            // Guardar el estudiante actual para usarlo al agregar observación
+                            _estudianteActual = await _context.Students
+                                .FirstOrDefaultAsync(s => s._id == observacionesPorEstudiante.First().Key.StudentId);
+                        }
+                        else
+                        {
+                            AgregarObservacionButton.IsVisible = false;
+                            _estudianteActual = null;
+                        }
                     }
                     else
                     {

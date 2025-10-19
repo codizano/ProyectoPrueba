@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ProyectoPrueba.AgregarObservacionWindow"
+        Title="Agregar Observación"
+        Width="500"
+        Height="400">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Información del Estudiante -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,15">
+            <TextBlock Text="Estudiante:" FontWeight="Bold"/>
+            <TextBlock Name="NombreEstudianteText" Text="-" FontSize="16"/>
+        </StackPanel>
+
+        <!-- Selector de Partitura -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,15">
+            <TextBlock Text="Seleccionar Partitura:" FontWeight="Bold"/>
+            <ComboBox Name="HojasComboBox" 
+                     Width="300"
+                     HorizontalAlignment="Left"
+                     Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <!-- Área de Observación -->
+        <StackPanel Grid.Row="2" Margin="0,0,0,15">
+            <TextBlock Text="Observación:" FontWeight="Bold"/>
+            <TextBox Name="ObservacionTextBox"
+                    Height="150"
+                    TextWrapping="Wrap"
+                    AcceptsReturn="True"
+                    Watermark="Escribe aquí tu observación..."
+                    Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <!-- Botones y Estado -->
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Mensaje de Estado -->
+            <TextBlock Name="EstadoText"
+                      Grid.Column="0"
+                      VerticalAlignment="Center"/>
+
+            <!-- Botones de Acción -->
+            <StackPanel Grid.Column="1" 
+                       Orientation="Horizontal" 
+                       HorizontalAlignment="Right" 
+                       Spacing="10">
+                <Button Content="Cancelar"
+                        Click="OnCancelarClick"
+                        Padding="20,10"/>
+                <Button Content="Guardar"
+                        Click="OnGuardarClick"
+                        Background="#4CAF50"
+                        Foreground="White"
+                        Padding="20,10"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
