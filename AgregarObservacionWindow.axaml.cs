@@ -1,10 +1,9 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Microsoft.EntityFrameworkCore;
 using ProyectoPrueba.Models;
-using System;
+
 
 namespace ProyectoPrueba
 {
@@ -14,19 +13,18 @@ namespace ProyectoPrueba
         private readonly Student _estudiante;
         private List<Sheet>? _hojas;
 
+        // Referencias a controles UI
+        private TextBlock? _estadoText;
+        private ComboBox? _hojasComboBox;
+        private TextBox? _observacionTextBox;
+
         public AgregarObservacionWindow(ApplicationDbContext context, Student estudiante)
         {
             InitializeComponent();
-            _context = context;
-            _estudiante = estudiante;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _estudiante = estudiante ?? throw new ArgumentNullException(nameof(estudiante));
 
-            // Inicializar la ventana
-            if (this.FindControl<TextBlock>("NombreEstudianteText") is TextBlock nombreEstudianteText)
-            {
-                nombreEstudianteText.Text = estudiante.Name;
-            }
-
-            // Cargar las hojas del estudiante
+            InicializarControles();
             _ = InicializarAsync();
         }
 
@@ -35,156 +33,144 @@ namespace ProyectoPrueba
             AvaloniaXamlLoader.Load(this);
         }
 
+        private void InicializarControles()
+        {
+            // Cachear referencias a controles
+            _estadoText = this.FindControl<TextBlock>("EstadoText");
+            _hojasComboBox = this.FindControl<ComboBox>("HojasComboBox");
+            _observacionTextBox = this.FindControl<TextBox>("ObservacionTextBox");
+
+            // Mostrar nombre del estudiante
+            if (this.FindControl<TextBlock>("NombreEstudianteText") is TextBlock nombreEstudianteText)
+            {
+                nombreEstudianteText.Text = _estudiante.Name;
+            }
+        }
+
+        private async Task InicializarAsync()
+        {
+            await CargarHojasEstudianteAsync();
+        }
+
         private async Task CargarHojasEstudianteAsync()
         {
             try
             {
-                try
+                _hojas = await _context.Sheets
+                    .Where(s => s.StudentId == _estudiante._id)
+                    .OrderBy(s => s.SheetName)
+                    .ToListAsync();
+
+                if (_hojas.Count > 0)
                 {
-                    _hojas = await _context.Sheets
-                        .Where(s => s.StudentId == _estudiante._id)
-                        .ToListAsync();
-
-                    var estadoTextLoad = this.FindControl<TextBlock>("EstadoText");
-                    if (estadoTextLoad != null)
-                    {
-                        estadoTextLoad.Text = $"Partituras cargadas: {_hojas.Count}";
-                    }
-                }
-                catch (Exception ex){
-                    // Mostrar error en consola
-                    Console.WriteLine($"Error interno al cargar partituras: {ex}"); 
-
-                    var estadoTextLoadError = this.FindControl<TextBlock>("EstadoText");
-                    if (estadoTextLoadError != null)
-                    {
-                        var innerException = ex;
-                        while (innerException.InnerException != null)
-                        {
-                            innerException = innerException.InnerException;
-                        }
-                        estadoTextLoadError.Text = $"Error al cargar partituras: {innerException.Message}";
-                    }
-                    throw; // Re-lanzar la excepción para manejarla en el nivel superior
-                }
-
-                if (_hojas != null && _hojas.Count > 0)
-                {
-                    var nombresHojas = _hojas.Select(h => h.SheetName).ToList();
-
-                    if (this.FindControl<ComboBox>("HojasComboBox") is ComboBox hojasComboBox)
-                    {
-                        hojasComboBox.ItemsSource = nombresHojas;
-                        hojasComboBox.SelectedIndex = 0;
-                    }
+                    CargarComboBoxHojas();
+                    MostrarMensajeEstado($"Partituras cargadas: {_hojas.Count}");
                 }
                 else
                 {
-                    var estadoTextNoSheets = this.FindControl<TextBlock>("EstadoText");
-                    if (estadoTextNoSheets != null)
-                    {
-                        estadoTextNoSheets.Text = "No hay partituras disponibles para este estudiante";
-                    }
+                    MostrarMensajeEstado("No hay partituras disponibles para este estudiante");
                 }
             }
             catch (Exception ex)
             {
-                // Mostrar error por console
+                var mensajeError = ObtenerMensajeErrorMasInterno(ex);
                 Console.WriteLine($"Error al cargar las partituras: {ex}");
-                var estadoTextCatch = this.FindControl<TextBlock>("EstadoText");
-                if (estadoTextCatch != null)
-                {
-                    estadoTextCatch.Text = $"Error al cargar las partituras: {ex.Message}";
-                }
+                MostrarMensajeEstado($"Error al cargar partituras: {mensajeError}");
+            }
+        }
+
+        private void CargarComboBoxHojas()
+        {
+            if (_hojasComboBox != null && _hojas != null && _hojas.Count > 0)
+            {
+                _hojasComboBox.ItemsSource = _hojas.Select(h => h.SheetName).ToList();
+                _hojasComboBox.SelectedIndex = 0;
             }
         }
 
         private void OnGuardarClick(object sender, RoutedEventArgs e)
         {
-            if (this.FindControl<TextBox>("ObservacionTextBox") is TextBox observacionTextBox &&
-                string.IsNullOrWhiteSpace(observacionTextBox.Text))
+            if (!ValidarFormulario())
             {
-                var estadoTextValidacionObs = this.FindControl<TextBlock>("EstadoText");
-                if (estadoTextValidacionObs != null)
-                {
-                    estadoTextValidacionObs.Text = "Por favor, ingresa una observación";
-                }
-                return;
-            }
-
-            if (this.FindControl<ComboBox>("HojasComboBox") is ComboBox hojasComboBox &&
-                hojasComboBox.SelectedItem == null)
-            {
-                var estadoTextValidacionPart = this.FindControl<TextBlock>("EstadoText");
-                if (estadoTextValidacionPart != null)
-                {
-                    estadoTextValidacionPart.Text = "Por favor, selecciona una partitura";
-                }
                 return;
             }
 
             _ = GuardarObservacionAsync();
         }
 
+        private bool ValidarFormulario()
+        {
+            if (_observacionTextBox == null || string.IsNullOrWhiteSpace(_observacionTextBox.Text))
+            {
+                MostrarMensajeEstado("Por favor, ingresa una observación");
+                return false;
+            }
+
+            if (_hojasComboBox == null || _hojasComboBox.SelectedItem == null)
+            {
+                MostrarMensajeEstado("Por favor, selecciona una partitura");
+                return false;
+            }
+
+            if (_hojas == null || _hojas.Count == 0)
+            {
+                MostrarMensajeEstado("No hay partituras disponibles");
+                return false;
+            }
+
+            return true;
+        }
+
         private async Task GuardarObservacionAsync()
         {
             try
             {
-                if (this.FindControl<ComboBox>("HojasComboBox") is ComboBox hojasComboBox &&
-                    this.FindControl<TextBox>("ObservacionTextBox") is TextBox observacionTextBox &&
-                    hojasComboBox.SelectedIndex >= 0 && 
-                    _hojas != null && 
-                    hojasComboBox.SelectedIndex < _hojas.Count)
+                if (_hojasComboBox == null || _observacionTextBox == null || _hojas == null)
                 {
-                    var hojaSeleccionada = _hojas[hojasComboBox.SelectedIndex];
-                    
-                    if (string.IsNullOrWhiteSpace(observacionTextBox.Text))
-                    {
-                        var estadoTextValidacion = this.FindControl<TextBlock>("EstadoText");
-                        if (estadoTextValidacion != null)
-                        {
-                            estadoTextValidacion.Text = "Por favor, ingresa una observación";
-                        }
-                        return;
-                    }
-
-                    var observacion = new SheetObservation
-                    {
-                        SheetId = hojaSeleccionada.Id,
-                        Observation = observacionTextBox.Text,
-                        ObservationDate = DateTime.SpecifyKind(DateTime.Now.Date, DateTimeKind.Utc)
-                    };
-
-                    _context.SheetObservations.Add(observacion);
-                    await _context.SaveChangesAsync();
-
-                    var estadoTextExito = this.FindControl<TextBlock>("EstadoText");
-                    if (estadoTextExito != null)
-                    {
-                        estadoTextExito.Text = "Observación guardada exitosamente";
-                    }
-
-                    // Limpiar campo
-                    observacionTextBox.Text = string.Empty;
+                    return;
                 }
+
+                // Copiar referencias de campo a variables locales para que el compilador
+                // reconozca que no son nulas y evitar advertencias de nullability.
+                var hojasLocal = _hojas;
+                var hojasComboBoxLocal = _hojasComboBox;
+                var observacionTextBoxLocal = _observacionTextBox;
+
+                var indiceSeleccionado = hojasComboBoxLocal.SelectedIndex;
+                if (indiceSeleccionado < 0 || indiceSeleccionado >= hojasLocal.Count)
+                {
+                    MostrarMensajeEstado("Selección de partitura inválida");
+                    return;
+                }
+
+                var hojaSeleccionada = hojasLocal[indiceSeleccionado];
+                // Usar accesso null-conditional por si acaso y luego validar con IsNullOrWhiteSpace.
+                var textoObservacion = observacionTextBoxLocal.Text?.Trim();
+
+                if (string.IsNullOrWhiteSpace(textoObservacion))
+                {
+                    MostrarMensajeEstado("Por favor, ingresa una observación");
+                    return;
+                }
+
+                var observacion = new SheetObservation
+                {
+                    SheetId = hojaSeleccionada.Id,
+                    Observation = textoObservacion,
+                    ObservationDate = DateTime.SpecifyKind(DateTime.Now.Date, DateTimeKind.Utc)
+                };
+
+                _context.SheetObservations.Add(observacion);
+                await _context.SaveChangesAsync();
+
+                MostrarMensajeEstado("Observación guardada exitosamente");
+                LimpiarFormulario();
             }
             catch (Exception ex)
             {
-                // Error por console
+                var mensajeError = ObtenerMensajeErrorMasInterno(ex);
                 Console.WriteLine($"Error al guardar la observación: {ex}");
-
-                var estadoTextError = this.FindControl<TextBlock>("EstadoText");
-                if (estadoTextError != null)
-                {
-                    // Obtener la excepción más interna
-                    var innerException = ex;
-                    while (innerException.InnerException != null)
-                    {
-                        innerException = innerException.InnerException;
-                    }
-                    
-                    estadoTextError.Text = $"Error al guardar la observación: {innerException.Message}";
-                }
+                MostrarMensajeEstado($"Error al guardar la observación: {mensajeError}");
             }
         }
 
@@ -193,17 +179,35 @@ namespace ProyectoPrueba
             Close();
         }
 
-        private void LimpiarMensajeEstado()
+        private void LimpiarFormulario()
         {
-            if (this.FindControl<TextBlock>("EstadoText") is TextBlock estadoText)
+            if (_observacionTextBox != null)
             {
-                estadoText.Text = string.Empty;
+                _observacionTextBox.Text = string.Empty;
             }
         }
 
-        private async Task InicializarAsync()
+        private void MostrarMensajeEstado(string mensaje)
         {
-            await CargarHojasEstudianteAsync();
+            if (_estadoText != null)
+            {
+                _estadoText.Text = mensaje;
+            }
+        }
+
+        private void LimpiarMensajeEstado()
+        {
+            MostrarMensajeEstado(string.Empty);
+        }
+
+        private static string ObtenerMensajeErrorMasInterno(Exception ex)
+        {
+            var innerException = ex;
+            while (innerException.InnerException != null)
+            {
+                innerException = innerException.InnerException;
+            }
+            return innerException.Message;
         }
     }
 }

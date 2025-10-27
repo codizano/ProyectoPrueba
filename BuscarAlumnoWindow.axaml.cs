@@ -2,8 +2,6 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Microsoft.EntityFrameworkCore;
 using ProyectoPrueba.Models;
-using System;
-using System.Linq;
 using System.Text;
 
 namespace ProyectoPrueba
@@ -42,7 +40,7 @@ namespace ProyectoPrueba
                                    so.Sheet.Student != null && 
                                    so.Sheet.Student.Name != null && 
                                    EF.Functions.ILike(so.Sheet.Student.Name, $"%{nombre}%"))
-                        .OrderByDescending(so => so.ObservationDate) // Ordenar por fecha más reciente
+                        .OrderByDescending(so => so.ObservationDate)
                         .ToListAsync();
 
                     if (observaciones.Any())
@@ -58,6 +56,7 @@ namespace ProyectoPrueba
 
                         var sb = new StringBuilder();
                         sb.AppendLine($"Se encontraron {observaciones.Count} observaciones para {observacionesPorEstudiante.Count} estudiante(s):");
+                        sb.AppendLine("(⚠️ Aquí solo se muestran las últimas 3 observaciones por estudiante)");
                         sb.AppendLine();
                         
                         foreach (var grupo in observacionesPorEstudiante)
@@ -68,7 +67,8 @@ namespace ProyectoPrueba
                             // Tomar las 3 observaciones más recientes de cada estudiante
                             foreach (var obs in grupo.Take(3))
                             {
-                                sb.AppendLine($"  • {obs.ObservationDate:dd/MM/yyyy}: {obs.Observation}");
+                                string sheetName = obs.Sheet?.SheetName ?? "Sin partitura";
+                                sb.AppendLine($"  • {obs.ObservationDate:dd/MM/yyyy} - [{sheetName}]: {obs.Observation}");
                             }
                             sb.AppendLine(); // Línea en blanco entre estudiantes
                         }
@@ -92,16 +92,22 @@ namespace ProyectoPrueba
                     else
                     {
                         ResultadoText.Text = $"No se encontraron observaciones para alumnos con nombre '{nombre}'";
+                        AgregarObservacionButton.IsVisible = false;
+                        _estudianteActual = null;
                     }
                 }
                 catch (Exception ex)
                 {
                     ResultadoText.Text = $"Error al buscar: {ex.Message}";
+                    AgregarObservacionButton.IsVisible = false;
+                    _estudianteActual = null;
                 }
             }
             else
             {
                 ResultadoText.Text = "Por favor ingresa un nombre";
+                AgregarObservacionButton.IsVisible = false;
+                _estudianteActual = null;
             }
         }
     }
