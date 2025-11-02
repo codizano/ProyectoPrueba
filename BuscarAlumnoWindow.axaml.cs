@@ -8,21 +8,35 @@ namespace ProyectoPrueba
 {
     public partial class BuscarAlumnoWindow : Window
     {
-        private readonly ApplicationDbContext _context;
+    private readonly ApplicationDbContext? _context;
         private Student? _estudianteActual;
 
-        public BuscarAlumnoWindow(ApplicationDbContext context)
+        // Parameterless constructor for XAML loader
+        public BuscarAlumnoWindow()
         {
             InitializeComponent();
+        }
+
+        public BuscarAlumnoWindow(ApplicationDbContext context) : this()
+        {
             _context = context;
         }
 
         private void OnAgregarObservacionClick(object sender, RoutedEventArgs e)
         {
-            if (_estudianteActual != null)
+            if (_estudianteActual != null && _context != null)
             {
                 var ventanaObservacion = new AgregarObservacionWindow(_context, _estudianteActual);
                 ventanaObservacion.Show();
+            }
+        }
+
+        private void OnAgregarPartituraClick(object sender, RoutedEventArgs e)
+        {
+            if (_estudianteActual != null && _context != null)
+            {
+                var ventanaPartitura = new AgregarPartituraWindow(_context, _estudianteActual);
+                ventanaPartitura.Show();
             }
         }
         
@@ -31,6 +45,13 @@ namespace ProyectoPrueba
             string nombre = BuscarTextBox?.Text ?? string.Empty;
             if (!string.IsNullOrWhiteSpace(nombre))
             {
+                if (_context == null)
+                {
+                    ResultadoText.Text = "Contexto de base de datos no disponible.";
+                    AgregarObservacionButton.IsVisible = false;
+                    _estudianteActual = null;
+                    return;
+                }
                 try
                 {
                     var observaciones = await _context.SheetObservations
@@ -75,17 +96,19 @@ namespace ProyectoPrueba
 
                         ResultadoText.Text = sb.ToString();
                         
-                        // Si solo hay un estudiante, mostrar el botón de agregar observación
+                        // Si solo hay un estudiante, mostrar los botones para agregar observación y partitura
                         if (observacionesPorEstudiante.Count == 1)
                         {
                             AgregarObservacionButton.IsVisible = true;
-                            // Guardar el estudiante actual para usarlo al agregar observación
+                            AgregarPartituraButton.IsVisible = true;
+                            // Guardar el estudiante actual para usarlo al agregar observación/partitura
                             _estudianteActual = await _context.Students
                                 .FirstOrDefaultAsync(s => s._id == observacionesPorEstudiante.First().Key.StudentId);
                         }
                         else
                         {
                             AgregarObservacionButton.IsVisible = false;
+                            AgregarPartituraButton.IsVisible = false;
                             _estudianteActual = null;
                         }
                     }
@@ -93,6 +116,7 @@ namespace ProyectoPrueba
                     {
                         ResultadoText.Text = $"No se encontraron observaciones para alumnos con nombre '{nombre}'";
                         AgregarObservacionButton.IsVisible = false;
+                        AgregarPartituraButton.IsVisible = false;
                         _estudianteActual = null;
                     }
                 }
@@ -100,6 +124,7 @@ namespace ProyectoPrueba
                 {
                     ResultadoText.Text = $"Error al buscar: {ex.Message}";
                     AgregarObservacionButton.IsVisible = false;
+                    AgregarPartituraButton.IsVisible = false;
                     _estudianteActual = null;
                 }
             }
@@ -107,6 +132,7 @@ namespace ProyectoPrueba
             {
                 ResultadoText.Text = "Por favor ingresa un nombre";
                 AgregarObservacionButton.IsVisible = false;
+                AgregarPartituraButton.IsVisible = false;
                 _estudianteActual = null;
             }
         }

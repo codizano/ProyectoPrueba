@@ -1,0 +1,24 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ProyectoPrueba.AgregarPartituraWindow"
+        Width="400" Height="260" Title="Agregar Partitura">
+  <StackPanel Margin="12" Spacing="8">
+    <TextBlock Text="Agregar nueva partitura" FontSize="18"/>
+
+    <TextBlock Text="Nombre de la partitura"/>
+    <TextBox Name="NombreTextBox"/>
+
+    <TextBlock Text="Objetivo (opcional)"/>
+    <TextBox Name="ObjetivoTextBox"/>
+
+    <TextBlock Text="Opinión (opcional)"/>
+    <TextBox Name="OpinionTextBox"/>
+
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Name="BtnCancelar" Content="Cancelar" Width="80"/>
+      <Button Name="BtnGuardar" Content="Guardar" Width="80"/>
+    </StackPanel>
+
+    <TextBlock Name="EstadoText" Foreground="Red"/>
+  </StackPanel>
+</Window>

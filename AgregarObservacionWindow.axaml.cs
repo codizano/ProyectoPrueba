@@ -9,8 +9,8 @@ namespace ProyectoPrueba
 {
     public partial class AgregarObservacionWindow : Window
     {
-        private readonly ApplicationDbContext _context;
-        private readonly Student _estudiante;
+    private readonly ApplicationDbContext? _context;
+    private readonly Student? _estudiante;
         private List<Sheet>? _hojas;
 
         // Referencias a controles UI
@@ -18,7 +18,13 @@ namespace ProyectoPrueba
         private ComboBox? _hojasComboBox;
         private TextBox? _observacionTextBox;
 
-        public AgregarObservacionWindow(ApplicationDbContext context, Student estudiante)
+        // Parameterless constructor required by Avalonia XAML loader
+        public AgregarObservacionWindow()
+        {
+            InitializeComponent();
+        }
+
+        public AgregarObservacionWindow(ApplicationDbContext context, Student estudiante) : this()
         {
             InitializeComponent();
             _context = context ?? throw new ArgumentNullException(nameof(context));
@@ -43,7 +49,8 @@ namespace ProyectoPrueba
             // Mostrar nombre del estudiante
             if (this.FindControl<TextBlock>("NombreEstudianteText") is TextBlock nombreEstudianteText)
             {
-                nombreEstudianteText.Text = _estudiante.Name;
+                if (_estudiante != null)
+                    nombreEstudianteText.Text = _estudiante.Name;
             }
         }
 
@@ -56,6 +63,12 @@ namespace ProyectoPrueba
         {
             try
             {
+                if (_context == null || _estudiante == null)
+                {
+                    MostrarMensajeEstado("Contexto o estudiante no disponible");
+                    return;
+                }
+
                 _hojas = await _context.Sheets
                     .Where(s => s.StudentId == _estudiante._id)
                     .OrderBy(s => s.SheetName)
@@ -159,6 +172,12 @@ namespace ProyectoPrueba
                     Observation = textoObservacion,
                     ObservationDate = DateTime.SpecifyKind(DateTime.Now.Date, DateTimeKind.Utc)
                 };
+
+                if (_context == null)
+                {
+                    MostrarMensajeEstado("Contexto de base de datos no disponible.");
+                    return;
+                }
 
                 _context.SheetObservations.Add(observacion);
                 await _context.SaveChangesAsync();

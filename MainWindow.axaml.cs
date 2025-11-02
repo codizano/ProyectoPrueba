@@ -8,11 +8,16 @@ namespace ProyectoPrueba
 {
     public partial class MainWindow : Window
     {
-        private readonly ApplicationDbContext _context;
-        
-        public MainWindow(ApplicationDbContext context)
+        private readonly ApplicationDbContext? _context;
+
+        // Parameterless constructor for Avalonia XAML loader
+        public MainWindow()
         {
             InitializeComponent();
+        }
+
+        public MainWindow(ApplicationDbContext context) : this()
+        {
             _context = context;
         }
         
@@ -32,13 +37,43 @@ namespace ProyectoPrueba
         {
             try
             {
-                var ventanaBuscar = new BuscarAlumnoWindow(_context);
-                ventanaBuscar.Show();
+                    if (_context == null)
+                    {
+                        Console.WriteLine("Contexto de base de datos no disponible.");
+                        return;
+                    }
+
+                    var ventanaBuscar = new BuscarAlumnoWindow(_context);
+                    ventanaBuscar.Show();
+                // Ejemplo: si desde BuscarAlumnoWindow obtienes un estudiante
+                // podrías abrir la ventana de agregar partitura así:
+                // var agregar = new AgregarPartituraWindow(_context, estudiante);
+                // agregar.Show();
             }
             catch (Exception ex)
             {
                 // Aquí podrías mostrar un diálogo de error
                 Console.WriteLine($"Error al abrir la ventana de búsqueda: {ex.Message}");
+            }
+        }
+
+        // Método público para abrir la ventana de agregar partitura para un estudiante dado
+        public void AbrirAgregarPartitura(ProyectoPrueba.Models.Student estudiante)
+        {
+            try
+            {
+                    if (_context == null)
+                    {
+                        Console.WriteLine("Contexto de base de datos no disponible.");
+                        return;
+                    }
+
+                    var ventana = new AgregarPartituraWindow(_context, estudiante);
+                    ventana.Show();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al abrir AgregarPartituraWindow: {ex.Message}");
             }
         }
         
@@ -48,10 +83,29 @@ namespace ProyectoPrueba
             {
                 var connectionString = App.Configuration?.GetConnectionString("PostgreSQL");
                 Console.WriteLine($"Usando cadena de conexión: {connectionString}");
-                
+
+                if (_context == null)
+                {
+                    Console.WriteLine("Contexto de base de datos no disponible.");
+                    var msgWin = new Window
+                    {
+                        Width = 300,
+                        Height = 120,
+                        Content = new TextBlock
+                        {
+                            Text = "Contexto de base de datos no disponible.",
+                            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                        }
+                    };
+                    msgWin.Show();
+                    return;
+                }
+
                 var canConnect = await _context.Database.CanConnectAsync();
                 Console.WriteLine($"¿Puede conectar?: {canConnect}");
-                
+
                 // Si llegamos aquí, la conexión fue exitosa
                 var messageBoxStandardWindow = new Window
                 {
@@ -64,7 +118,7 @@ namespace ProyectoPrueba
                         VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
                     }
                 };
-                
+
                 messageBoxStandardWindow.Show();
             }
             catch (Exception ex)
@@ -82,7 +136,7 @@ namespace ProyectoPrueba
                         VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
                     }
                 };
-                
+
                 messageBoxStandardWindow.Show();
             }
         }
