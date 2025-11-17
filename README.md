@@ -1,3 +1,6 @@
+# Notas
+Creo que en la tabla de Sheet no vale la pena usar fechas, más si en observaciones.
+
 # Sistema de Gestión de Observaciones de Estudiantes
 
 Este proyecto es una aplicación de escritorio desarrollada con Avalonia UI y .NET que permite gestionar y realizar seguimiento de las observaciones de estudiantes, utilizando Entity Framework Core para la gestión de la base de datos PostgreSQL.
@@ -116,6 +119,43 @@ sequenceDiagram
 - `observation_date` (date): Fecha de la observación
 - `created_at` (timestamp): Fecha de creación
 - `updated_at` (timestamp): Fecha de última actualización
+
+### Otra forma de ver las tablas
+
+# Esquema de Tablas PostgreSQL
+## 1. Tabla: `students`
+
+| Columna      | Tipo                        | Longitud | Nulo | Valor por defecto        | Descripción |
+|--------------|------------------------------|----------|------|---------------------------|-------------|
+| `_id`        | character varying            | 255      | NO   | —                         | Identificador del estudiante |
+| `name`       | character varying            | 255      | NO   | —                         | Nombre del estudiante |
+| `created_at` | timestamp without time zone  | —        | YES  | `CURRENT_TIMESTAMP`       | Fecha de creación |
+| `updated_at` | timestamp without time zone  | —        | YES  | `CURRENT_TIMESTAMP`       | Fecha de actualización |
+
+---
+
+## 2. Tabla: `sheets`
+
+| Columna      | Tipo                        | Longitud | Nulo | Valor por defecto                               | Descripción |
+|--------------|------------------------------|----------|------|--------------------------------------------------|-------------|
+| `id`         | integer                      | —        | NO   | `nextval('sheets_id_seq'::regclass)`            | ID de la hoja |
+| `student_id` | character varying            | 255      | YES  | —                                                | ID del estudiante (FK → students._id) |
+| `sheet_name` | character varying            | 255      | NO   | —                                                | Nombre de la hoja |
+| `objective`  | text                         | —        | YES  | —                                                | Objetivo del plan |
+| `opinion`    | text                         | —        | YES  | —                                                | Opiniones |
+| `created_at` | timestamp without time zone  | —        | YES  | `CURRENT_TIMESTAMP`                              | Fecha de creación |
+| `updated_at` | timestamp without time zone  | —        | YES  | `CURRENT_TIMESTAMP`                              | Fecha de actualización |
+
+---
+
+## 3. Tabla: `sheet_observations`
+
+| Columna            | Tipo   | Longitud | Nulo | Valor por defecto                                        | Descripción |
+|--------------------|---------|----------|------|-----------------------------------------------------------|-------------|
+| `id`               | integer | —        | NO   | `nextval('sheet_observations_id_seq'::regclass)`         | ID de la observación |
+| `sheet_id`         | integer | —        | YES  | —                                                         | ID de la hoja (FK → sheets.id) |
+| `observation`      | text    | —        | NO   | —                                                         | Observación registrada |
+| `observation_date` | date    | —        | NO   | `CURRENT_DATE`                                            | Fecha de la observación |
 
 ## 🔧 Configuración del Proyecto
 
